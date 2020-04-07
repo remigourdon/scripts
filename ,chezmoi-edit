@@ -1,0 +1,5 @@
+#!/bin/bash
+# Edit with chezmoi from list
+set -Eeuo pipefail
+
+,chezmoi-list | fzf --multi --print0 | xargs -0 -I{} bash -c 'chezmoi edit -a {}'
