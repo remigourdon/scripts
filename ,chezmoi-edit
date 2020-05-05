@@ -2,4 +2,8 @@
 # Edit with chezmoi from list
 set -Eeuo pipefail
 
-,chezmoi-list | fzf --multi --print0 | xargs -0 -I{} bash -c 'chezmoi edit -a {}'
+if [[ "${#}" -ge 1 ]] ; then
+    chezmoi managed | grep "${*}" | fzf -0 -1 --multi --print0 | xargs -0 -I{} bash -c 'chezmoi edit -a {}'
+else
+    chezmoi managed | fzf -0 -1 --multi --print0 | xargs -0 -I{} bash -c 'chezmoi edit -a {}'
+fi
