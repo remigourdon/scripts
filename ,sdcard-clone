@@ -1,0 +1,102 @@
+#!/bin/bash
+# Clone an SD card and optionally compress on the fly
+# Will display progress if pv is installed
+set -Eeuo pipefail
+
+#########
+# USAGE #
+#########
+
+usage() {
+    echo "Usage: $(basename "${0}") [OPTIONS] DEVICE IMAGE
+
+Clone an SD card and optionally compress on the fly.
+
+OPTIONS:
+    -z    Compress on the fly with gzip
+    -h    Display this message"
+}
+
+###################
+# OPTIONS PARSING #
+###################
+
+COMPRESS=false
+
+while getopts 'zh' opts ; do
+    case "${opts}" in
+        z)
+            COMPRESS=true
+            ;;
+        h)
+            usage
+            exit 1
+            ;;
+        ?)
+            usage
+            exit 1
+            ;;
+    esac
+done
+shift "$((OPTIND - 1))"
+
+################
+# ARGS PARSING #
+################
+
+if [[ ${#} -ne 2 ]] ; then
+    usage
+    exit 1
+else
+    DEVICE="${1}"
+    IMAGE="${2}"
+fi
+
+###############
+# CHECK IMAGE #
+###############
+
+if [[ -e "${IMAGE}" ]] ; then
+    echo -n "${IMAGE} exists, overwrite (y/n)? "
+    read -r -n1 response
+    echo
+    [[ "${response}" != "y" ]] && exit 1
+fi
+
+##################
+# UNMOUNT DEVICE #
+##################
+
+if ! grep "${DEVICE}" /proc/mounts | cut -d' ' -f1 | xargs -r umount ; then
+    echo "Could not unmount device ${DEVICE} partitions, aborting"
+    exit 1
+fi
+
+#################
+# PREPARE PIPES #
+#################
+
+COMMANDS=()
+
+# Run with pv if available
+command -v pv &>/dev/null && COMMANDS+=("pv")
+
+# Run with gzip if compression is requested
+[[ "${COMPRESS}" = true ]] && COMMANDS+=("gzip")
+
+# Join with pipe
+PIPE=" | "
+PIPINGS="$(printf "${PIPE}%s" "${COMMANDS[@]}")"
+PIPINGS="${PIPINGS:${#PIPE}}"
+
+#########
+# CLONE #
+#########
+
+echo "Starting cloning..."
+if eval "<${DEVICE} ${PIPINGS} >${IMAGE}" ; then
+    echo "Cloning done!"
+else
+    echo "Cloning failed!"
+    exit 1
+fi

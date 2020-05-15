@@ -1,0 +1,94 @@
+#!/bin/bash
+# Flash an SD card and decompress on the fly
+# Will display progress if pv is installed
+set -Eeuo pipefail
+
+#########
+# USAGE #
+#########
+
+usage() {
+    echo "Usage: $(basename "${0}") [OPTIONS] IMAGE DEVICE
+
+Flash an SD card and decompress on the fly.
+
+OPTIONS:
+    -h    Display this message"
+}
+
+###################
+# OPTIONS PARSING #
+###################
+
+while getopts 'h' opts ; do
+    case "${opts}" in
+        h)
+            usage
+            exit 1
+            ;;
+        ?)
+            usage
+            exit 1
+            ;;
+    esac
+done
+shift "$((OPTIND - 1))"
+
+################
+# ARGS PARSING #
+################
+
+if [[ ${#} -ne 2 ]] ; then
+    usage
+    exit 1
+else
+    IMAGE="${1}"
+    DEVICE="${2}"
+fi
+
+###############
+# CHECK IMAGE #
+###############
+
+if ! [[ -f "${IMAGE}" ]] ; then
+    echo "${IMAGE} does not exist, aborting"
+    exit 1
+fi
+
+##################
+# UNMOUNT DEVICE #
+##################
+
+if ! grep "${DEVICE}" /proc/mounts | cut -d' ' -f1 | xargs -r umount ; then
+    echo "Could not unmount device ${DEVICE} partitions, aborting"
+    exit 1
+fi
+
+#################
+# PREPARE PIPES #
+#################
+
+COMMANDS=()
+
+# Run with gzip if image is compressed
+file -b "${IMAGE}" | grep -q gzip && COMMANDS+=("gzip -d")
+
+# Run with pv if available
+command -v pv &>/dev/null && COMMANDS+=("pv")
+
+# Join with pipe
+PIPE=" | "
+PIPINGS="$(printf "${PIPE}%s" "${COMMANDS[@]}")"
+PIPINGS="${PIPINGS:${#PIPE}}"
+
+#########
+# FLASH #
+#########
+
+echo "Starting flashing..."
+if eval "<${IMAGE} ${PIPINGS} >${DEVICE}" ; then
+    echo "Flashing done!"
+else
+    echo "Flashing failed!"
+    exit 1
+fi
