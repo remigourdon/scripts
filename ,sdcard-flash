@@ -59,9 +59,13 @@ fi
 # UNMOUNT DEVICE #
 ##################
 
-if ! grep "${DEVICE}" /proc/mounts | cut -d' ' -f1 | xargs -r umount ; then
-    echo "Could not unmount device ${DEVICE} partitions, aborting"
-    exit 1
+MOUNTS="$(grep "${DEVICE}" /proc/mounts || true)"
+
+if [[ -n "${MOUNTS}" ]] ; then
+    if ! echo "${MOUNTS}" | cut -d' ' -f1 | xargs -r umount ; then
+        echo "Could not unmount device ${DEVICE} partitions, aborting"
+        exit 1
+    fi
 fi
 
 #################
