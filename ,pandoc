@@ -1,0 +1,115 @@
+#!/bin/bash
+# Wrapper around pandoc for beautiful docs
+set -Eeuo pipefail
+
+#########
+# USAGE #
+#########
+
+usage() {
+    echo "Usage: $(basename "${0}") [OPTIONS] INPUT
+
+Wrapper around pandoc for beautiful docs.
+
+OPTIONS:
+    -t FORMAT   Output format in [pdf,docx,odt] (defaults to pdf or output extension)
+    -o OUTPUT   Output filename
+    -O          Open output file
+    -h          Display this message"
+}
+
+###################
+# OPTIONS PARSING #
+###################
+
+output_format="pdf"
+output=""
+open=false
+
+while getopts 't:o:Oh' opts ; do
+    case "${opts}" in
+        t)
+            output_format="${OPTARG}"
+            ;;
+        o)
+            output="${OPTARG}"
+            ;;
+        O)
+            open=true
+            ;;
+        h)
+            usage
+            exit 1
+            ;;
+        ?)
+            usage
+            exit 1
+            ;;
+    esac
+done
+shift "$((OPTIND - 1))"
+
+################
+# ARGS PARSING #
+################
+
+if [[ ${#} -ne 1 ]] ; then
+    usage
+    exit 1
+else
+    input="${1}"
+fi
+
+
+#############
+# FUNCTIONS #
+#############
+
+convert() {
+    pandoc "${1}" \
+        -V linkcolor:blue \
+        -V geometry:letterpaper \
+        -V geometry:margin=1in \
+        -V mainfont="DejaVu Serif" \
+        -V monofont="DejaVu Sans Mono" \
+        -o "${2}"
+}
+
+#################
+# OUTPUT FORMAT #
+#################
+
+if [[ -n "${output}" ]] ; then
+    output_format="${output##*.}"
+fi
+
+###########
+# ACTIONS #
+###########
+
+case "${output_format}" in
+
+    pdf)
+        output="${output:=${1%.*}.pdf}"
+        convert "${input}" "${output}"
+        [[ "${open}" = true ]] && "${READER}" "${output}" &
+        ;;
+    docx)
+        output="${output:=${1%.*}.docx}"
+        convert "${input}" "${output}"
+        [[ "${open}" = true ]] && libreoffice "${output}" &
+        ;;
+    odt)
+        output="${output:=${1%.*}.odt}"
+        convert "${input}" "${output}"
+        [[ "${open}" = true ]] && libreoffice "${output}" &
+        ;;
+    *)
+        >&2 echo "Invalid output format '${output_format}'"
+        usage
+        exit 1
+        ;;
+
+esac
+
+echo "Output written to ${output}"
