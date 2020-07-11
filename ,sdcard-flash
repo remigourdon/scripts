@@ -90,7 +90,7 @@ PIPINGS="${PIPINGS:${#PIPE}}"
 #########
 
 echo "Starting flashing..."
-if eval "<${IMAGE} ${PIPINGS} >${DEVICE}" ; then
+if eval "<${IMAGE} ${PIPINGS} >${DEVICE} && sync" ; then
     echo "Flashing done!"
 else
     echo "Flashing failed!"
