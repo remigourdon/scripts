@@ -72,6 +72,7 @@ convert() {
         -V geometry:margin=1in \
         -V mainfont="DejaVu Serif" \
         -V monofont="DejaVu Sans Mono" \
+        --highlight-style tango \
         -o "${2}"
 }
 
