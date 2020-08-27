@@ -1,0 +1,71 @@
+#!/bin/bash
+# Convert Jupyter notebook to PDF
+set -Eeuo pipefail
+
+#########
+# USAGE #
+#########
+
+usage() {
+    echo "Usage: $(basename "${0}") [OPTIONS] NOTEBOOK
+
+Convert Jupyter notebook to PDF.
+
+OPTIONS:
+    -l    Output PDF in landscape mode
+    -h    Display this message"
+}
+
+###################
+# OPTIONS PARSING #
+###################
+
+landscape=false
+
+while getopts 'lh' opts ; do
+    case "${opts}" in
+        l)
+            landscape=true
+            ;;
+        h)
+            usage
+            exit 1
+            ;;
+        ?)
+            usage
+            exit 1
+            ;;
+    esac
+done
+shift "$((OPTIND - 1))"
+
+################
+# ARGS PARSING #
+################
+
+if [[ ${#} -ne 1 ]] ; then
+    usage
+    exit 1
+else
+    notebook="${1}"
+fi
+
+###########
+# ACTIONS #
+###########
+
+jupyter nbconvert --to latex "${notebook}"
+
+texfile="${notebook%.*}.tex"
+
+if [[ "${landscape}" = true ]] ; then
+    sed -Ei 's/(\documentclass.*)\](.*)/\1,landscape]\2/' "${texfile}"
+fi
+
+pdflatex "${texfile}"
+
+###########
+# CLEANUP #
+###########
+
+rm -f "${texfile%.*}".{tex,aux,out,log}
