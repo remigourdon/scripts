@@ -12,6 +12,7 @@ usage() {
 Convert Jupyter notebook to PDF.
 
 OPTIONS:
+    -t    Set custom title for the document
     -l    Output PDF in landscape mode
     -h    Display this message"
 }
@@ -20,10 +21,14 @@ OPTIONS:
 # OPTIONS PARSING #
 ###################
 
+title=""
 landscape=false
 
-while getopts 'lh' opts ; do
+while getopts 't:lh' opts ; do
     case "${opts}" in
+        t)
+            title="${OPTARG}"
+            ;;
         l)
             landscape=true
             ;;
@@ -58,8 +63,12 @@ jupyter nbconvert --to latex "${notebook}"
 
 texfile="${notebook%.*}.tex"
 
+if [[ -n "${title}" ]] ; then
+    sed -Ei "s/(.*title)\{.*/\1{${title}}/" "${texfile}"
+fi
+
 if [[ "${landscape}" = true ]] ; then
-    sed -Ei 's/(\documentclass.*)\](.*)/\1,landscape]\2/' "${texfile}"
+    sed -Ei "s/(\documentclass.*)\](.*)/\1,landscape]\2/" "${texfile}"
 fi
 
 pdflatex "${texfile}"
