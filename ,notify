@@ -1,0 +1,119 @@
+#!/bin/bash
+# Notify through notify-send and Pushover
+set -Eeuo pipefail
+
+#########
+# USAGE #
+#########
+
+usage() {
+    echo "Usage: $(basename "${0}") [OPTIONS] MESSAGE
+
+Notify through notify-send and Pushover.
+
+OPTIONS:
+    -t TOKEN    Pushover token (can also be set using PUSHOVER_TOKEN env)
+    -u USER     Pushover user (can also be set using PUSHOVER_USER env)
+    -P          Disable Pushover notification
+    -c          Check (run with verbose on but do not nofity)
+    -v          Verbose
+    -h          Display this message"
+}
+
+###################
+# OPTIONS PARSING #
+###################
+
+PUSHOVER_TOKEN="${PUSHOVER_TOKEN-}"
+PUSHOVER_USER="${PUSHOVER_USER-}"
+PUSHOVER=true
+CHECK=false
+VERBOSE=false
+
+while getopts 't:u:Pcvh' opts ; do
+    case "${opts}" in
+        t)
+            PUSHOVER_TOKEN="${OPTARG}"
+            ;;
+        u)
+            PUSHOVER_USER="${OPTARG}"
+            ;;
+        P)
+            PUSHOVER=false
+            ;;
+        c)
+            VERBOSE=true
+            CHECK=true
+            ;;
+        v)
+            VERBOSE=true
+            ;;
+        h)
+            usage
+            exit 1
+            ;;
+        ?)
+            usage
+            exit 1
+            ;;
+    esac
+done
+shift "$((OPTIND - 1))"
+
+################
+# ARGS PARSING #
+################
+
+if [[ ${#} -eq 0 ]] ; then
+    usage
+    exit 1
+else
+    MESSAGE="${*}"
+fi
+
+##########
+# CHECKS #
+##########
+
+if [[ "${PUSHOVER}" = true ]] && [[ -z "${PUSHOVER_TOKEN}" ]] ; then
+    echo "Missing Pushover token" >&2
+fi
+
+if [[ "${PUSHOVER}" = true ]] && [[ -z "${PUSHOVER_USER}" ]] ; then
+    echo "Missing Pushover user" >&2
+fi
+
+##########
+# NOTIFY #
+##########
+
+# Notify using Pushover if token and user exist
+
+if [[ "${PUSHOVER}" = true ]] && [[ -n "${PUSHOVER_TOKEN}" ]] && [[ -n "${PUSHOVER_USER}" ]] ; then
+
+    [[ "${VERBOSE}" = true ]] && echo "Notifying through Pushover"
+
+    if [[ "${VERBOSE}" = true ]] ; then
+        echo -e "Pushover token:\t${PUSHOVER_TOKEN}"
+        echo -e "Pushover user:\t${PUSHOVER_USER}"
+    fi
+
+    if [[ "${CHECK}" = false ]] ; then
+        if ! curl -s \
+                --form-string "token=${PUSHOVER_TOKEN}" \
+                --form-string "user=${PUSHOVER_USER}" \
+                --form-string "message=${USER}@${HOSTNAME} ${MESSAGE}" \
+                https://api.pushover.net/1/messages.json | jq --exit-status '.status == 1' &>/dev/null ; then
+            echo "Error notifying through Pushover" >&2
+        fi
+    fi
+
+fi
+
+# Notify using notify-send
+
+[[ "${VERBOSE}" = true ]] && echo "Notifying through notify-send"
+
+if [[ "${CHECK}" = false ]] ; then
+    notify-send "${MESSAGE}"
+fi
