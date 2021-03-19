@@ -1,0 +1,29 @@
+#!/bin/bash
+# Run psql from within Docker
+set -Eeuo pipefail
+
+# The postgres container is setup as follows
+# docker run --name postgres-testing --restart=unless-stopped --publish 5432:5432 --env POSTGRES_PASSWORD=pass --detach postgis/postgis
+
+psql_args="-h 127.0.0.1 ${@}"
+inputrc_config="$(cat <<EOF
+set editing-mode vi
+\$if mode=vi
+set keymap vi-command
+Control-l: clear-screen
+Control-p: history-search-backward
+Control-n: history-search-forward
+set keymap vi-insert
+Control-l: clear-screen
+Control-p: history-search-backward
+Control-n: history-search-forward
+\$endif
+EOF
+)"
+
+docker run \
+    --tty --interactive \
+    --rm \
+    --network host \
+    postgis/postgis:latest \
+    bash -c "echo -e '${inputrc_config}' >> /etc/inputrc && exec psql $psql_args"
