@@ -17,13 +17,24 @@ if grep -q '^DP-1-1$' <<< "${MONITORS}" && grep -q '^DP-1-2$' <<< "${MONITORS}" 
         --output DP-1-2 --mode 2560x1440 --pos 2560x0 --rotate normal \
         --output DP-1-3 --off
 elif grep -q '^DP-1$' <<< "${MONITORS}" && grep -q '^DP-2$' <<< "${MONITORS}" ; then
-    echo "Setting monitors in home configuration (docked)"
+    echo "Setting monitors in home configuration for work laptop (docked)"
     xrandr \
         --output eDP-1 --off \
         --output HDMI-1 --off \
         --output HDMI-2 --off \
         --output DP-1 --mode 1920x1080 --pos 0x0 --rotate right \
         --output DP-2 --mode 3840x1600 --pos 1080x0 --rotate normal \
+        --output DP-1-1 --off \
+        --output DP-1-2 --off \
+        --output DP-1-3 --off
+elif grep -q '^DP-1$' <<< "${MONITORS}" && [[ "${HOSTNAME}" = "laptop-home" ]] ; then
+    echo "Setting monitors in home configuration for home laptop (docked)"
+    xrandr \
+        --output eDP-1 --off \
+        --output HDMI-1 --off \
+        --output HDMI-2 --off \
+        --output DP-1 --mode 3840x1600 --pos 0x0 --rotate normal \
+        --output DP-2 --off \
         --output DP-1-1 --off \
         --output DP-1-2 --off \
         --output DP-1-3 --off
