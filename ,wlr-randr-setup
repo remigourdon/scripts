@@ -8,7 +8,7 @@ MONITORS="$(wlr-randr | grep -o '^[^ ]*')"
 if grep -q '^DP-4$' <<< "${MONITORS}" && grep -q '^DP-5$' <<< "${MONITORS}" ; then
     echo "Setting monitors in office configuration (docked)"
     wlr-randr \
-        --output eDP-1 --mode 3456x2160@60.000999Hz --pos 1600,1440 --scale 2 \
+        --output eDP-1 --on --mode 3456x2160@60.000999Hz --pos 1600,1440 --scale 2 \
         --output DP-4 --on --mode 2560x1440@59.951000Hz --pos 0,0 --scale 1 \
         --output DP-5 --on --mode 2560x1440@59.951000Hz --pos 2560,0 --scale 1
 elif grep -q '^DP-2$' <<< "${MONITORS}" && grep -q '^DP-3$' <<< "${MONITORS}" ; then
