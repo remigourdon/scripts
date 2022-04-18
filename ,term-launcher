@@ -7,9 +7,9 @@ HEIGHT=30
 
 case "${TERMINAL}" in
     gnome-terminal)
-        "${TERMINAL}" --title "${TITLE}" --name "${TITLE}" --role "${TITLE}" --geometry "${WIDTH}x${HEIGHT}" --hide-menubar -- ,launcher
+        "${TERMINAL}" --title "${TITLE}" --name "${TITLE}" --role "${TITLE}" --geometry "${WIDTH}x${HEIGHT}" --hide-menubar -- ,launcher "${@}"
         ;;
     foot)
-        "${TERMINAL}" --title "${TITLE}" --app-id "${TITLE}" --window-size-chars "${WIDTH}x${HEIGHT}" ,launcher
+        "${TERMINAL}" --title "${TITLE}" --app-id "${TITLE}" --window-size-chars "${WIDTH}x${HEIGHT}" ,launcher "${@}"
         ;;
 esac

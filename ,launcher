@@ -1,7 +1,8 @@
 #!/bin/bash
 # Launcher for payloads
 
-FZF_CMD=("fzf" "--delimiter" "/" "--with-nth" "-1")
+PAYLOAD="${1:-}"
+FZF_CMD=("fzf" "-1" "--delimiter" "/" "--with-nth" "-1" "--query" "${PAYLOAD}")
 
 LAUNCHER_DIR="$( dirname "${BASH_SOURCE[0]}" )"
 PAYLOADS_DIR="${LAUNCHER_DIR}/payloads"
