@@ -1,0 +1,14 @@
+#!/bin/bash
+# Thin wrapper to open ,launcher in terminal
+
+case "${TERMINAL}" in
+    gnome-terminal)
+        "${TERMINAL}" -- ,launcher
+        ;;
+    foot)
+        "${TERMINAL}" ,launcher
+        ;;
+    *)
+        "${TERMINAL}" -e ,launcher
+        ;;
+esac

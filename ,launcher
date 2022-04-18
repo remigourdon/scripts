@@ -1,0 +1,10 @@
+#!/bin/bash
+# Launcher for payloads
+
+LAUNCHER_DIR="$( dirname "${BASH_SOURCE[0]}" )"
+PAYLOADS_DIR="${LAUNCHER_DIR}/payloads"
+
+# Override default options
+FZF_DEFAULT_OPTS="--delimiter '/' --with-nth -1"
+SELECTED="$(find "${PAYLOADS_DIR}" -type f ! -name "README.md" | fzf)"
+eval "${SELECTED}"
