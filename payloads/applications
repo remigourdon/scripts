@@ -1,7 +1,8 @@
 #!/bin/bash
 # Launch applications from .desktop files
 
-FZF_CMD=("fzf" "--delimiter" "/" "--with-nth" "-1" "--preview" "bat {}")
+FZF_CMD=("fzf" "--delimiter" "\t" "--with-nth" "3" "--preview" "bat {1}")
+TERMINAL_CMD="${TERMINAL} -e"
 
 findDesktopFiles() {
     local application_dirs=()
@@ -13,4 +14,18 @@ findDesktopFiles() {
     find "${application_dirs[@]}" -type f -name '*.desktop'
 }
 
-SELECTED=$(findDesktopFiles | "${FZF_CMD[@]}")
+parseDesktopFiles() {
+    while read -r file ; do
+        name="$(sed -En 's!^Name[[:space:]]*=[[:space:]]*(.+)!\1!p' "${file}")"
+        executable="$(sed -En 's!^Exec[[:space:]]*=[[:space:]]*(.+)!\1!p' "${file}")"
+        terminal="$(sed -En 's!^Terminal[[:space:]]*=[[:space:]]*(.+)!\1!p' "${file}")"
+        [[ "${terminal}" = true ]] && executable="${TERMINAL_CMD} ${executable}"
+        echo -e "${file}\t${executable}\t${name}"
+    done
+}
+
+SELECTED=$(findDesktopFiles | parseDesktopFiles | "${FZF_CMD[@]}" | cut -d $'\t' -f2)
+
+# Start application and detach
+setsid /bin/sh -c "${SELECTED}" >&/dev/null </dev/null &
+sleep 0.01
