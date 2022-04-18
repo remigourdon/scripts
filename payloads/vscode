@@ -1,5 +1,5 @@
 #!/bin/bash
-# Open project in VSCode
+# Open project(s) in VSCode
 
 GIT_LOG_CMD="git -C {} log --all --decorate --oneline --color=always -- | head -n3"
 FZF_CMD=("fzf" "--multi" "--info" "inline" "--reverse" "--delimiter" "/" "--with-nth" "-1" "--preview-window" "up,3" "--preview" "${GIT_LOG_CMD}")

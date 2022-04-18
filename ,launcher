@@ -2,7 +2,7 @@
 # Launcher for payloads
 
 PAYLOAD="${1:-}"
-FZF_CMD=("fzf" "--info" "hidden" "-1" "--delimiter" "/" "--with-nth" "-1" "--query" "${PAYLOAD}" "--preview-window" "up,1" "--preview" "sed '2q;d' {}")
+FZF_CMD=("fzf" "--info" "hidden" "-1" "--delimiter" "/" "--with-nth" "-1" "--query" "${PAYLOAD}" "--preview-window" "up,1" "--preview" "sed -n '2s/^#[[:space:]]*//p;d' {}")
 
 LAUNCHER_DIR="$( dirname "${BASH_SOURCE[0]}" )"
 PAYLOADS_DIR="${LAUNCHER_DIR}/payloads"
