@@ -1,31 +1,20 @@
 #!/bin/bash
 # Launch applications from .desktop files
+# Uses freedesktop2launcher binary to find and parse desktop files
 
-FZF_CMD=("fzf" "--delimiter" "\t" "--with-nth" "3" "--preview" "bat {1}")
+FZF_CMD=("fzf" "--delimiter" "\t" "--with-nth" "2" "--preview" "echo {3}")
 TERMINAL_CMD="${TERMINAL} -e"
 
-findDesktopFiles() {
-    local application_dirs=()
-    readarray -d ':' -t share_dirs <<< "${XDG_DATA_HOME-${HOME}/.local/share}:${XDG_DATA_DIRS-/usr/local/share:/usr/share}"
-    for share_dir in "${share_dirs[@]}" ; do
-        # Append to existing array with -O option (start index)
-        readarray -t -O "${#application_dirs[@]}" application_dirs < <(find "${share_dir%/}/applications" -type d 2>/dev/null)
-    done
-    find "${application_dirs[@]}" -type f -name '*.desktop'
+removeFieldCodes() {
+    sed 's/%[[:alpha:]]//g'
 }
 
-parseDesktopFiles() {
-    while read -r file ; do
-        name="$(sed -En 's!^Name[[:space:]]*=[[:space:]]*(.+)!\1!p' "${file}")"
-        executable="$(sed -En 's!^Exec[[:space:]]*=[[:space:]]*(.+)!\1!p' "${file}")"
-        terminal="$(sed -En 's!^Terminal[[:space:]]*=[[:space:]]*(.+)!\1!p' "${file}")"
-        [[ "${terminal}" = true ]] && executable="${TERMINAL_CMD} ${executable}"
-        echo -e "${file}\t${executable}\t${name}"
-    done
-}
+SELECTED=$(freedesktop2launcher | "${FZF_CMD[@]}")
+EXECUTABLE="$(cut -d $'\t' -f 4 <<< "${SELECTED}" | removeFieldCodes)"
 
-SELECTED=$(findDesktopFiles | parseDesktopFiles | "${FZF_CMD[@]}" | cut -d $'\t' -f2)
+# Check if it needs to be run in a terminal
+[ "$(cut -d $'\t' -f 5 <<< "${SELECTED}")" = true ] && EXECUTABLE="${TERMINAL_CMD} ${EXECUTABLE}"
 
 # Start application and detach
-setsid /bin/sh -c "${SELECTED}" >&/dev/null </dev/null &
+setsid /bin/sh -c "${EXECUTABLE}" >&/dev/null </dev/null &
 sleep 0.01
