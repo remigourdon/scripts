@@ -1,4 +1,7 @@
 #!/bin/bash
+# Launch applications from .desktop files
+
+FZF_CMD=("fzf" "--delimiter" "/" "--with-nth" "-1" "--preview" "bat {}")
 
 findDesktopFiles() {
     local application_dirs=()
@@ -10,4 +13,4 @@ findDesktopFiles() {
     find "${application_dirs[@]}" -type f -name '*.desktop'
 }
 
-findDesktopFiles | fzf
+SELECTED=$(findDesktopFiles | "${FZF_CMD[@]}")
