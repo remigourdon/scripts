@@ -9,7 +9,7 @@ removeFieldCodes() {
     sed 's/%[[:alpha:]]//g'
 }
 
-SELECTED=$(freedesktop2launcher | "${FZF_CMD[@]}")
+SELECTED="$(freedesktop2launcher | "${FZF_CMD[@]}")"
 EXECUTABLE="$(cut -d $'\t' -f 4 <<< "${SELECTED}" | removeFieldCodes)"
 
 # Check if it needs to be run in a terminal
