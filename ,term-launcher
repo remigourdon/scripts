@@ -1,14 +1,15 @@
 #!/bin/bash
 # Thin wrapper to open ,launcher in terminal
 
+TITLE=term-launcher
+WIDTH=100
+HEIGHT=30
+
 case "${TERMINAL}" in
     gnome-terminal)
-        "${TERMINAL}" -- ,launcher
+        "${TERMINAL}" --title "${TITLE}" --name "${TITLE}" --role "${TITLE}" --geometry "${WIDTH}x${HEIGHT}" --hide-menubar -- ,launcher
         ;;
     foot)
-        "${TERMINAL}" ,launcher
-        ;;
-    *)
-        "${TERMINAL}" -e ,launcher
+        "${TERMINAL}" --title "${TITLE}" --app-id "${TITLE}" --window-size-chars "${WIDTH}x${HEIGHT}" ,launcher
         ;;
 esac

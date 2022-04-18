@@ -1,0 +1,13 @@
+#!/bin/bash
+
+findDesktopFiles() {
+    local application_dirs=()
+    readarray -d ':' -t share_dirs <<< "${XDG_DATA_HOME-${HOME}/.local/share}:${XDG_DATA_DIRS-/usr/local/share:/usr/share}"
+    for share_dir in "${share_dirs[@]}" ; do
+        # Append to existing array with -O option (start index)
+        readarray -t -O "${#application_dirs[@]}" application_dirs < <(find "${share_dir%/}/applications" -type d 2>/dev/null)
+    done
+    find "${application_dirs[@]}" -type f -name '*.desktop'
+}
+
+findDesktopFiles | fzf
