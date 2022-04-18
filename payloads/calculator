@@ -1,0 +1,4 @@
+#!/bin/bash
+# Start a Python interpreter with math loaded
+
+python -i -c "import math"
