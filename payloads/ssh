@@ -1,5 +1,5 @@
 #!/bin/bash
-# Connect to an SSH remote
+# Connect to SSH remote(s)
 
 FZF_CMD=("fzf" "--multi" "--info" "inline" "--reverse")
 TERMINAL_CMD=("${TERMINAL}" "-e" "--term" "screen")
