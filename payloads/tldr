@@ -18,4 +18,8 @@ LIST="$(tldr --raw "${SELECTED_COMMAND}" | sed -En "s/${COMMENT_LINE_REGEX}/\1/p
 
 # Select a specific cheatsheet item and copy it
 FZF_CMD=("fzf" "--info" "inline" "--reverse" "--delimiter" "\t" "--with-nth" "1" "--preview-window" "up,1" "--preview" "echo {2}")
-echo -e "${LIST}" | "${FZF_CMD[@]}" | cut -d $'\t' -f2 | "${CLIPBOARD_COPY_CMD}"
+SELECTED="$(echo -e "${LIST}" | "${FZF_CMD[@]}" | cut -d $'\t' -f2)"
+
+[ -z "${SELECTED}" ] && exit 2
+
+"${CLIPBOARD_COPY_CMD}" "${SELECTED}"
