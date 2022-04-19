@@ -3,6 +3,7 @@
 
 FZF_CMD=("fzf" "--multi" "--info" "inline" "--reverse")
 TERMINAL_CMD=("${TERMINAL}" "-e" "--term" "screen")
+TRY_TMUX="${TRY_TMUX:-true}"
 
 # Get list of hosts to connect to
 readarray -t SELECTED_REMOTES < <(awk '$0 ~ "Host " {print $2}' ~/.ssh/config* | grep -v '^\*$' | "${FZF_CMD[@]}")
@@ -18,8 +19,6 @@ for remote in "${SELECTED_REMOTES[@]}" ; do
     if command -v sshpass &>/dev/null && ! "${PASSWORD_TEST_CMD[@]}" &>/dev/null ; then
         # Read password from user
         read -rsp 'Password: ' password
-        # Write password to anonymous pipe
-        exec 5<<<"${password}"
         # Add sshpass and read password from anonymous pipe
         CMD+=("sshpass" "-d" "5")
     fi
@@ -27,10 +26,16 @@ for remote in "${SELECTED_REMOTES[@]}" ; do
     # Prepare SSH command
     CMD+=("ssh" "${remote}")
 
-    # If remote has tmux, add arguments for tmux session with SSH TTY
-    TMUX_TEST_CMD=("${CMD[@]}" "command" "-v" "tmux")
-    if "${TMUX_TEST_CMD[@]}" &>/dev/null ; then
-        CMD+=("-t" "tmux new-session -A -s ${USER}")
+    # If tmux should be tried
+    if [[ "${TRY_TMUX}" = true ]] ; then
+        # If needed write password again to anonymous pipe
+        [[ -n "${password}" ]] && exec 5<<<"${password}"
+
+        # If remote has tmux, add arguments for tmux session with SSH TTY
+        TMUX_TEST_CMD=("${CMD[@]}" "command" "-v" "tmux")
+        if "${TMUX_TEST_CMD[@]}" &>/dev/null ; then
+            CMD+=("-t" "tmux new-session -A -s ${USER}")
+        fi
     fi
 
     # If needed write password again to anonymous pipe

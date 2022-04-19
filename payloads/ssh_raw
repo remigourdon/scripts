@@ -1,0 +1,7 @@
+#!/bin/bash
+# Connect to SSH remote(s) without trying tmux
+
+SCRIPT_DIR="$( dirname "${BASH_SOURCE[0]}" )"
+SSH_SCRIPT="${SCRIPT_DIR}/ssh"
+
+TRY_TMUX=false "${SSH_SCRIPT}"
