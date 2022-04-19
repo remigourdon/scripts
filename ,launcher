@@ -8,4 +8,4 @@ LAUNCHER_DIR="$( dirname "${BASH_SOURCE[0]}" )"
 PAYLOADS_DIR="${LAUNCHER_DIR}/payloads"
 
 SELECTED="$(find "${PAYLOADS_DIR}" -type f ! -name "README.md" | "${FZF_CMD[@]}")"
-eval "${SELECTED}"
+FZF_DEFAULT_OPTS="" eval "${SELECTED}"
