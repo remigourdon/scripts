@@ -1,0 +1,43 @@
+#!/bin/bash
+# Connect to an SSH remote
+
+FZF_CMD=("fzf" "--multi" "--info" "inline" "--reverse")
+TERMINAL_CMD=("${TERMINAL}" "-e" "--term" "screen")
+
+# Get list of hosts to connect to
+readarray -t SELECTED_REMOTES < <(awk '$0 ~ "Host " {print $2}' ~/.ssh/config* | grep -v '^\*$' | "${FZF_CMD[@]}")
+
+for remote in "${SELECTED_REMOTES[@]}" ; do
+
+    # Initialize variables
+    CMD=()
+    password=""
+
+    # If sshpass available, check if password needed and save it
+    PASSWORD_TEST_CMD=("ssh" "-o" "PasswordAuthentication=no" "${remote}" "exit")
+    if command -v sshpass &>/dev/null && ! "${PASSWORD_TEST_CMD[@]}" &>/dev/null ; then
+        # Read password from user
+        read -rsp 'Password: ' password
+        # Write password to anonymous pipe
+        exec 5<<<"${password}"
+        # Add sshpass and read password from anonymous pipe
+        CMD+=("sshpass" "-d" "5")
+    fi
+
+    # Prepare SSH command
+    CMD+=("ssh" "${remote}")
+
+    # If remote has tmux, add arguments for tmux session with SSH TTY
+    TMUX_TEST_CMD=("${CMD[@]}" "command" "-v" "tmux")
+    if "${TMUX_TEST_CMD[@]}" &>/dev/null ; then
+        CMD+=("-t" "tmux new-session -A -s ${USER}")
+    fi
+
+    # If needed write password again to anonymous pipe
+    [[ -n "${password}" ]] && exec 5<<<"${password}"
+
+    # Start terminal with SSH session and detach
+    setsid "${TERMINAL_CMD[@]}" "${CMD[@]}" >&/dev/null </dev/null &
+    sleep 0.01
+
+done
