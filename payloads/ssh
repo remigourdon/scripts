@@ -18,7 +18,8 @@ for remote in "${SELECTED_REMOTES[@]}" ; do
     PASSWORD_TEST_CMD=("ssh" "-o" "PasswordAuthentication=no" "${remote}" "exit")
     if command -v sshpass &>/dev/null && ! "${PASSWORD_TEST_CMD[@]}" &>/dev/null ; then
         # Read password from user
-        read -rsp 'Password: ' password
+        read -rsp "Password for ${remote}: " password
+        echo
         # Add sshpass and read password from anonymous pipe
         CMD+=("sshpass" "-d" "5")
     fi
