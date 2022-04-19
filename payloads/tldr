@@ -1,0 +1,21 @@
+#!/bin/bash
+# Copy tldr to clipboard
+
+CLIPBOARD_COPY_CMD="wl-copy"
+
+# Select a tldr command for which we want to see the cheatsheet
+FZF_CMD=("fzf" "--info" "inline" "--reverse" "--preview-window" "up,1" "--preview" "tldr --raw {} | sed -n 's/^> //p' | head -n1")
+SELECTED_COMMAND="$(tldr --list | "${FZF_CMD[@]}")"
+
+[ -z "${SELECTED_COMMAND}" ] && exit 1
+
+# Match on comment and command lines
+# Strip unwanted characters
+# Use paste to replace every other newline with a tab
+COMMENT_LINE_REGEX="^-[[:space:]]*([^:]*):?$"
+COMMAND_LINE_REGEX="^\`([^\`]*)\`"
+LIST="$(tldr --raw "${SELECTED_COMMAND}" | sed -En "s/${COMMENT_LINE_REGEX}/\1/p;s/${COMMAND_LINE_REGEX}/\1/p" | paste - -)"
+
+# Select a specific cheatsheet item and copy it
+FZF_CMD=("fzf" "--info" "inline" "--reverse" "--delimiter" "\t" "--with-nth" "1" "--preview-window" "up,1" "--preview" "echo {2}")
+echo -e "${LIST}" | "${FZF_CMD[@]}" | cut -d $'\t' -f2 | "${CLIPBOARD_COPY_CMD}"
