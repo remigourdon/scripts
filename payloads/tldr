@@ -3,7 +3,7 @@
 
 SCRIPT_DIR="$( dirname "${BASH_SOURCE[0]}" )"
 
-CLIPBOARD_COPY_CMD="wl-copy"
+CLIPBOARD_COPY_CMD=("wl-copy" "--foreground")
 
 # Select a tldr command for which we want to edit the cheatsheet
 SELECTED_COMMAND="$("${SCRIPT_DIR}/_tldr_select")"
@@ -23,4 +23,5 @@ SELECTED="$(echo -e "${LIST}" | "${FZF_CMD[@]}" | cut -d $'\t' -f2)"
 
 [ -z "${SELECTED}" ] && exit 2
 
-"${CLIPBOARD_COPY_CMD}" "${SELECTED}"
+setsid "${CLIPBOARD_COPY_CMD[@]}" "${SELECTED}" >&/dev/null </dev/null &
+sleep 0.01
