@@ -1,0 +1,20 @@
+#!/bin/bash
+# Connect to a VPN defined in Network Manager
+
+AWK_FILTER="\$3 == \"vpn\" { print \$1 }"
+FZF_CMD=("fzf" "--info" "inline" "--reverse")
+
+SELECTED="$(nmcli connection show | awk "${AWK_FILTER}" | "${FZF_CMD[@]}")"
+CONNECTED="$(nmcli connection show --active | awk "${AWK_FILTER}")"
+
+# Connect to VPN if not already active
+if [[ -n "${SELECTED}" ]] ; then
+    if grep -q "${SELECTED}" <<< "${CONNECTED}" ; then
+        read -r -n 1 -p "Disconnect? " answer
+        echo
+        [[ "${answer}" == "y" ]] && nmcli connection down "${SELECTED}"
+        sleep 2
+    else
+        nmcli connection up "${SELECTED}" --ask
+    fi
+fi
