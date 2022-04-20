@@ -41,6 +41,6 @@ fi
 
 # Start application and detach
 TERMINAL_CMD="${TERMINAL} -e"
-EXECUTABLE="${TERMINAL_CMD} vim ${PAGE_PATH}"
+EXECUTABLE="${TERMINAL_CMD} ${EDITOR} ${PAGE_PATH}"
 setsid /bin/sh -c "${EXECUTABLE}" >&/dev/null </dev/null &
 sleep 0.01
