@@ -1,0 +1,46 @@
+#!/bin/bash
+# Edit tldr custom pages
+
+SCRIPT_DIR="$( dirname "${BASH_SOURCE[0]}" )"
+
+# Figure out where the custom pages are
+CUSTOM_PAGES_DIR="$(tldr --show-paths | sed -En 's/Custom[^:]+: //p')"
+CUSTOM_PAGES_DIR="${CUSTOM_PAGES_DIR%/}"
+
+# Select a tldr command for which we want to edit the cheatsheet
+SELECTED_COMMAND="$("${SCRIPT_DIR}/_tldr_select" -p)"
+
+[ -z "${SELECTED_COMMAND}" ] && exit 1
+
+# Prepare placeholders
+HEADER_PLACEHOLDER="# ${SELECTED_COMMAND}"
+COMMAND_DESC_PLACEHOLDER="> Command\n> Description"
+SNIPPET_PLACEHOLDER=$(cat <<EOF
+- Snippet description
+
+\`Snippet\`
+EOF
+)
+
+# Check if a custom page already exists
+CUSTOM_PAGE="$(find "${CUSTOM_PAGES_DIR}" -type f | grep --only-matching --max-count 1 --extended-regexp "${SELECTED_COMMAND}\.(page|patch)")"
+if [ -n "${CUSTOM_PAGE}" ] ; then
+    PAGE_PATH="${CUSTOM_PAGES_DIR}/${CUSTOM_PAGE}"
+else
+    # Check if tldr already has a page with that name
+    # Create a patch if that's the case
+    # Otherwise create a new custom page
+    if tldr --list | grep -q "${SELECTED_COMMAND}" ; then
+        PAGE_PATH="${CUSTOM_PAGES_DIR}/${SELECTED_COMMAND}.patch"
+        echo -e "${HEADER_PLACEHOLDER}\n\n${SNIPPET_PLACEHOLDER}" > "${PAGE_PATH}"
+    else
+        PAGE_PATH="${CUSTOM_PAGES_DIR}/${SELECTED_COMMAND}.page"
+        echo -e "${HEADER_PLACEHOLDER}\n\n${COMMAND_DESC_PLACEHOLDER}\n\n${SNIPPET_PLACEHOLDER}" > "${PAGE_PATH}"
+    fi
+fi
+
+# Start application and detach
+TERMINAL_CMD="${TERMINAL} -e"
+EXECUTABLE="${TERMINAL_CMD} vim ${PAGE_PATH}"
+setsid /bin/sh -c "${EXECUTABLE}" >&/dev/null </dev/null &
+sleep 0.01
