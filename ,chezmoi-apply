@@ -1,9 +1,0 @@
-#!/bin/bash
-# Edit with chezmoi from list
-set -Eeuo pipefail
-
-if [[ "${#}" -ge 1 ]] ; then
-    chezmoi managed | grep "${*}" | fzf -0 -1 --multi --print0 | xargs -0 -I{} bash -c 'chezmoi apply {}'
-else
-    chezmoi managed | fzf -0 -1 --multi --print0 | xargs -0 -I{} bash -c 'chezmoi apply {}'
-fi
