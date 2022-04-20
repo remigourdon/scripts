@@ -1,0 +1,11 @@
+#!/bin/bash
+# List all tldr commands including custom
+
+# Figure out where the custom pages are
+CUSTOM_PAGES_DIR="$(tldr --show-paths | sed -En 's/Custom[^:]+: //p')"
+CUSTOM_PAGES_DIR="${CUSTOM_PAGES_DIR%/}"
+
+# List custom pages (not patches)
+CUSTOM_PAGES="$(find "${CUSTOM_PAGES_DIR}" -type f -name '*.page' -printf "%f\n" 2>/dev/null | sed 's/.page$//')"
+
+tldr --list | cat - <(echo -e "${CUSTOM_PAGES}") | sort

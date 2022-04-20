@@ -1,11 +1,12 @@
 #!/bin/bash
 # Copy tldr to clipboard
 
+SCRIPT_DIR="$( dirname "${BASH_SOURCE[0]}" )"
+
 CLIPBOARD_COPY_CMD="wl-copy"
 
-# Select a tldr command for which we want to see the cheatsheet
-FZF_CMD=("fzf" "--info" "inline" "--reverse" "--preview-window" "up,1" "--preview" "tldr --raw {} | sed -n 's/^> //p' | head -n1")
-SELECTED_COMMAND="$(tldr --list | "${FZF_CMD[@]}")"
+# Select a tldr command for which we want to edit the cheatsheet
+SELECTED_COMMAND="$("${SCRIPT_DIR}/_tldr_select")"
 
 [ -z "${SELECTED_COMMAND}" ] && exit 1
 

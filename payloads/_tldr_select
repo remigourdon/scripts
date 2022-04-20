@@ -1,0 +1,19 @@
+#!/bin/bash
+# Select tldr command
+
+SCRIPT_DIR="$( dirname "${BASH_SOURCE[0]}" )"
+
+# Check for a -p (print query) option
+PRINT_QUERY=false
+while getopts 'p' opts ; do
+    case "${opts}" in
+        p)
+            PRINT_QUERY=true
+            ;;
+    esac
+done
+shift "$((OPTIND - 1))"
+
+FZF_CMD=("fzf" "--info" "inline" "--reverse" "--preview-window" "up,1" "--preview" "tldr --raw {} | sed -n 's/^> //p' | head -n1")
+[[ "${PRINT_QUERY}" = true ]] && FZF_CMD+=("--bind" "enter:replace-query+print-query")
+"${SCRIPT_DIR}/_tldr_list_all" | "${FZF_CMD[@]}"

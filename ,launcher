@@ -7,5 +7,5 @@ FZF_CMD=("fzf" "--info" "hidden" "-1" "--delimiter" "/" "--with-nth" "-1" "--que
 LAUNCHER_DIR="$( dirname "${BASH_SOURCE[0]}" )"
 PAYLOADS_DIR="${LAUNCHER_DIR}/payloads"
 
-SELECTED="$(find "${PAYLOADS_DIR}" -type f ! -name "README.md" | "${FZF_CMD[@]}")"
+SELECTED="$(find "${PAYLOADS_DIR}" -type f ! -name "README.md" ! -name '_*' | "${FZF_CMD[@]}")"
 FZF_DEFAULT_OPTS="" eval "${SELECTED}"
