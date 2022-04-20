@@ -1,0 +1,21 @@
+#!/bin/bash
+# Edit chezmoi config files
+
+SCRIPT_DIR="$( dirname "${BASH_SOURCE[0]}" )"
+
+FZF_CMD=("fzf" "--info" "inline" "--reverse")
+
+SELECTED="${TARGET_PATH}/$(chezmoi managed --include files | "${FZF_CMD[@]}")"
+
+[ -z "${SELECTED}" ] && exit 1
+
+# Prepare source file path (in chezmoi directory)
+TARGET_DIR="$(chezmoi target-path)"
+TARGET_PATH="${TARGET_DIR}/${SELECTED#/}"
+SOURCE_PATH="$(chezmoi source-path "${TARGET_PATH}")"
+
+# Start application and detach
+TERMINAL_CMD="${TERMINAL} -e"
+EXECUTABLE="${TERMINAL_CMD} ${EDITOR} ${SOURCE_PATH}"
+setsid /bin/sh -c "${EXECUTABLE}" >&/dev/null </dev/null &
+sleep 0.01
