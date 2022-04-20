@@ -8,4 +8,4 @@ CUSTOM_PAGES_DIR="${CUSTOM_PAGES_DIR%/}"
 # List custom pages (not patches)
 CUSTOM_PAGES="$(find "${CUSTOM_PAGES_DIR}" -type f -name '*.page' -printf "%f\n" 2>/dev/null | sed 's/.page$//')"
 
-tldr --list | cat - <(echo -e "${CUSTOM_PAGES}") | sort
+tldr --list | cat - <(echo -ne "${CUSTOM_PAGES}") | sort
