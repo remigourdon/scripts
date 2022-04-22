@@ -5,7 +5,8 @@ SECTIONS_TO_SHOW=("To Do" "In Progress")
 
 getItems() {
     local section="${1}"
-    sed -n "/^## ${section}/,/^## /p" | sed 's/- \[ \]/+/;$d'
+    # Grab section, simplify items prefix and strip links
+    sed -n "/^## ${section}/,/^## /p" | sed 's/- \[ \]/+/;$d' | sed -E 's!\[([^]]+)\]\([^)]+\)!\1!g'
 }
 
 KANBAN="$(cat "${KANBAN_FILE}")"
