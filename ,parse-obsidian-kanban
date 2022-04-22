@@ -1,0 +1,15 @@
+#!/bin/bash
+
+KANBAN_FILE="${1}"
+SECTIONS_TO_SHOW=("To Do" "In Progress")
+
+getItems() {
+    local section="${1}"
+    sed -n "/^## ${section}/,/^## /p" | sed 's/- \[ \]/+/;$d'
+}
+
+KANBAN="$(cat "${KANBAN_FILE}")"
+
+for section in "${SECTIONS_TO_SHOW[@]}" ; do
+    echo -e "${KANBAN}" | getItems "${section}"
+done | bat --color=always --style=plain --language=md
