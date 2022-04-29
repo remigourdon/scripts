@@ -18,11 +18,11 @@ for monitor in "${MONITORS[@]}" ; do
     name="$(cut -d $'\t' -f2 <<< "${monitor}")"
     echo "  > ${id} named '${name}'"
     # Figure out which id corresponds to which monitor
-    grep -q "VP3881" <<< "${name}" && HOME_WIDE_ID="${id}"
-    grep -q "U2414H" <<< "${name}" && HOME_TALL_ID="${id}"
     if [[ "${id}" != "${INTERNAL_ID}" ]] ; then
-        [[ -z "${WORK_LEFT_ID}" ]] && WORK_LEFT_ID="${id}"
-        [[ -n "${WORK_LEFT_ID}" ]] && WORK_RIGHT_ID="${id}"
+        grep -q "VP3881" <<< "${name}" && HOME_WIDE_ID="${id}" && continue
+        grep -q "U2414H" <<< "${name}" && HOME_TALL_ID="${id}" && continue
+        [[ -z "${WORK_LEFT_ID}" ]] && WORK_LEFT_ID="${id}" && continue
+        [[ -n "${WORK_LEFT_ID}" ]] && WORK_RIGHT_ID="${id}" && continue
     fi
 done
 
