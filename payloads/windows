@@ -1,0 +1,15 @@
+#!/bin/bash
+# Select and switch to a window (sway)
+
+SCRIPT_DIR="$( dirname "${BASH_SOURCE[0]}" )"
+
+FZF_CMD=("fzf" "--info" "hidden" "--reverse" "--delimiter" "\t" "--with-nth" "1")
+
+# Get window list using zx script
+# Since zx is installed using asdf's node, we source asdf first
+WINDOW_LIST="$(bash -c "source ${HOME}/.asdf/asdf.sh && ${SCRIPT_DIR}/_sway_windows")"
+
+SELECTED_ID="$(echo -e "${WINDOW_LIST}" | "${FZF_CMD[@]}" | cut -d $'\t' -f2)"
+
+# Focus selected sway window
+swaymsg [con_id="${SELECTED_ID}"] focus
