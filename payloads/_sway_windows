@@ -1,0 +1,40 @@
+#!/usr/bin/env zx
+
+$.verbose = false;
+
+let data = JSON.parse(await $`swaymsg -t get_tree`);
+
+function extractNodesInteractive(workspace) {
+  let floatingNodes = [].concat(workspace.floating_nodes);
+  return floatingNodes.concat(workspace.nodes.reduce((acc, node) => {
+    // Leaf node
+    if (node.nodes.length == 0) {
+      return acc.concat(node);
+    } else {
+      return acc.concat(node.nodes);
+    }
+  }, []));
+}
+
+function getWindows() {
+  return data.nodes.reduce((outerAcc, outerNode) => {
+    // We skip the scratchpad
+    if (outerNode.name !== '__i3' && outerNode.type === 'output') {
+      return outerAcc.concat(outerNode.nodes.reduce((innerAcc, innerNode) => {
+        if (innerNode.type === 'workspace') {
+          return innerAcc.concat(extractNodesInteractive(innerNode));
+        } else {
+          return innerAcc;
+        }
+      }, []));
+    } else {
+      return outerAcc;
+    }
+  }, []);
+}
+
+let windows = getWindows();
+
+windows.forEach(w => {
+  console.log(`${w.name}\t${w.id}`)
+});
