@@ -3,7 +3,7 @@
 
 FZF_CMD=("fzf" "--multi" "--info" "inline" "--reverse" "--delimiter" "/" "--with-nth" "-1")
 
-readarray -t SELECTED < <(fd --extension pdf . ~ | "${FZF_CMD[@]}")
+readarray -t SELECTED < <(fd --no-ignore --extension pdf . ~ | "${FZF_CMD[@]}")
 
 # Start application and detach
 [ "${#SELECTED[@]}" -ne 0 ] && setsid "${READER}" "${SELECTED[@]}" >&/dev/null </dev/null &
