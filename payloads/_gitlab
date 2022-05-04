@@ -22,6 +22,7 @@ const query = `query {
         webUrl
         state
         approved
+        createdAt
         updatedAt
         assignees {
           nodes {
@@ -68,7 +69,7 @@ const mergeRequestsToReview = mergeRequestsFlattened.filter(mr => mr.reviewers.i
 let output = "";
 mergeRequestsToReview.forEach(mr => {
   const state = `${mr.state} ${mr.approved ? '✔️' : ''}`
-  output += `${mr.project.name}\t${mr.title}\t${mr.assignees.join(" ")}\t${mr.reviewers.join(" ")}\t${state}\t${mr.webUrl}\0`
+  output += `${mr.project.name}\t${mr.title}\t${mr.assignees.join(" ")}\t${mr.reviewers.join(" ")}\t${state}\t${mr.webUrl}\t${mr.createdAt}\t${mr.updatedAt}\0`
 });
 
 console.log(output);

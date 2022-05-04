@@ -3,7 +3,8 @@
 
 SCRIPT_DIR="$( dirname "${BASH_SOURCE[0]}" )"
 
-FZF_CMD=("fzf" "--read0" "--info" "hidden" "--reverse" "--delimiter" "\t" "--with-nth" "2" "--preview-window" "up,4" "--preview" "echo -e 'Repo: {1}\nAssignees: {3}\nReviewers: {4}\nState: {5}'")
+PREVIEW_CMD="echo -e 'Project:\t{1}\nCreated:\t{7}\nUpdated:\t{8}\nState:\t\t{5}\nAssignees:\t{3}\nReviewers:\t{4}'"
+FZF_CMD=("fzf" "--read0" "--info" "hidden" "--reverse" "--delimiter" "\t" "--with-nth" "2" "--preview-window" "up,6" "--preview" "${PREVIEW_CMD}")
 
 SELECTED_URL="$(bash -c "source ${HOME}/.asdf/asdf.sh && ${SCRIPT_DIR}/_gitlab" | "${FZF_CMD[@]}" | cut -d $'\t' -f 6)"
 
