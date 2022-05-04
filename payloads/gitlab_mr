@@ -8,5 +8,7 @@ FZF_CMD=("fzf" "--read0" "--info" "hidden" "--reverse" "--delimiter" "\t" "--wit
 
 SELECTED_URL="$(bash -c "source ${HOME}/.asdf/asdf.sh && ${SCRIPT_DIR}/_gitlab" | "${FZF_CMD[@]}" | cut -d $'\t' -f 6)"
 
+[[ -z "${SELECTED_URL}" ]] && exit 0
+
 # Open MR URL in browser
 "${BROWSER}" "${SELECTED_URL}"
