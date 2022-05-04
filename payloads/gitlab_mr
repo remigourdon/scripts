@@ -1,0 +1,11 @@
+#!/bin/bash
+# Open GitLab MR to be reviewed in browser
+
+SCRIPT_DIR="$( dirname "${BASH_SOURCE[0]}" )"
+
+FZF_CMD=("fzf" "--read0" "--info" "hidden" "--reverse" "--delimiter" "\t" "--with-nth" "2" "--preview-window" "up,4" "--preview" "echo -e 'Repo: {1}\nAssignees: {3}\nReviewers: {4}\nState: {5}'")
+
+SELECTED_URL="$(bash -c "source ${HOME}/.asdf/asdf.sh && ${SCRIPT_DIR}/_gitlab" | "${FZF_CMD[@]}" | cut -d $'\t' -f 6)"
+
+# Open MR URL in browser
+"${BROWSER}" "${SELECTED_URL}"

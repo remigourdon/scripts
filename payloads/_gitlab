@@ -1,0 +1,74 @@
+#!/usr/bin/env zx
+
+$.verbose = false;
+
+const username = "rgourdon";
+
+// Check token
+const token = process.env.GITLAB_TOKEN;
+if (typeof token === "undefined") {                                                                                                                                                                                                                                                     
+  console.log(chalk.red("Missing GITLAB_TOKEN environment variable, aborting"));                                                                                                                                                                                                        
+  process.exit(1);                                                                                                                                                                                                                                                                      
+}
+
+const query = `query {
+  group(fullPath: "lynk-global/mission-software") {
+    mergeRequests(includeSubgroups: true, state: opened, draft: false, sort: UPDATED_DESC) {
+      nodes {
+        project {
+          name
+        }
+        title
+        webUrl
+        state
+        approved
+        updatedAt
+        assignees {
+          nodes {
+            username
+          }
+        }
+        reviewers {
+          nodes {
+            username
+          }
+        }
+        approvedBy {
+          nodes {
+            username
+          }
+        }
+      }
+    }
+  }
+}
+`;
+const response = await fetch("https://gitlab.com/api/graphql", {                                                                                                                                                                
+  method: 'post',
+  headers: { "Authorization": `Bearer ${token}`, 'Content-Type': 'application/json' },
+  body: JSON.stringify({ query })
+});
+const json = await response.json();
+const mergeRequests = json.data.group.mergeRequests.nodes;
+
+// Flatten
+const mergeRequestsFlattened = mergeRequests.map(mr => {
+  const assignees = mr.assignees.nodes.map(n => n.username);
+  const approvedBy = mr.approvedBy.nodes.map(n => n.username);
+  const reviewers = mr.reviewers.nodes.map(n => {
+    const username = n.username;
+    return approvedBy.includes(username) ? `${username} ✔️` : username;
+  });
+  return Object.assign({}, mr, { assignees, reviewers, approvedBy });
+});
+
+// Filter to only what I need to review
+const mergeRequestsToReview = mergeRequestsFlattened.filter(mr => mr.reviewers.includes(username) && !mr.approvedBy.includes(username));
+
+let output = "";
+mergeRequestsToReview.forEach(mr => {
+  const state = `${mr.state} ${mr.approved ? '✔️' : ''}`
+  output += `${mr.project.name}\t${mr.title}\t${mr.assignees.join(" ")}\t${mr.reviewers.join(" ")}\t${state}\t${mr.webUrl}\0`
+});
+
+console.log(output);
