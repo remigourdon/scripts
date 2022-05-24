@@ -1,0 +1,13 @@
+#!/bin/bash
+# From https://github.com/moby/moby/issues/40132
+stuck=$(docker ps -a | grep Removal | cut -f1 -d' ')
+echo "$stuck"
+for container in $stuck; do
+	zfs_path=$(docker inspect "$container" | jq -c '.[] | select(.State | .Status == "dead")|.GraphDriver.Data.Dataset')
+	zfs_path=$(echo "$zfs_path"|tr -d '"')
+	sudo zfs destroy -R "$zfs_path"
+	sudo zfs destroy -R "$zfs_path"-init
+       	sudo zfs create "$zfs_path"
+       	sudo zfs create "$zfs_path"-init
+	docker rm "$container"
+done
