@@ -5,6 +5,7 @@ FZF_CMD=("fzf" "--info" "hidden" "--reverse" "--delimiter" "\t" "--with-nth" "1"
 
 read -r -d '' LIST <<'EOF'
 Lock\tswaylock --daemonize --color 000000
+Suspend\tsystemctl suspend
 Reboot\tsystemctl reboot
 Power-off\tsystemctl poweroff
 Log out\tswaymsg exit
