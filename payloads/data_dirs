@@ -1,0 +1,12 @@
+#!/bin/bash
+# Open data directory in terminal
+
+FZF_CMD=("fzf" "--multi" "--info" "inline" "--reverse" "--delimiter" "/" "--with-nth" "-1")
+
+readarray -t SELECTED < <(fd --type directory --max-depth 1 '^\d{4}' ~/Data | sort --reverse | "${FZF_CMD[@]}")
+
+# Start application and detach
+TERMINAL_CMD="${TERMINAL} -e -D ${SELECTED}"
+EXECUTABLE="${TERMINAL_CMD}"
+setsid /bin/sh -c "${EXECUTABLE}" >&/dev/null </dev/null &
+sleep 0.01
