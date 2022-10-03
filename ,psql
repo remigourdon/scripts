@@ -5,7 +5,80 @@ set -Eeuo pipefail
 # The postgres container is setup as follows
 # docker run --name postgres-testing --restart=unless-stopped --publish 5432:5432 --env POSTGRES_PASSWORD=pass --detach postgis/postgis
 
-psql_args="-h 127.0.0.1 ${@}"
+###############
+# DEFINITIONS #
+###############
+
+HOSTNAME="127.0.0.1"
+PORT="5432"
+USER_NAME="postgres"
+DB_NAME="postgres"
+
+VERSION="latest"
+
+#########
+# USAGE #
+#########
+
+usage() {
+    echo "Usage: $(basename "${0}") [OPTIONS]
+
+Run psql from within Docker.
+
+OPTIONS:
+    -H HOSTNAME Server hostname (defaults to '${HOSTNAME}')
+    -p PORT     Server port (defaults to '${PORT}')
+    -U USERNAME User name (defaults to '${USER_NAME}')
+    -d DBNAME   Database name (defaults to '${DB_NAME}')
+    -v VERSION  PSQL version (defaults to '${VERSION}')
+    -h    Display this message"
+}
+
+###################
+# OPTIONS PARSING #
+###################
+
+while getopts 'hH:p:U:d:v:' opts ; do
+    case "${opts}" in
+        H)
+            HOSTNAME="${OPTARG}"
+            ;;
+        p)
+            PORT="${OPTARG}"
+            ;;
+        U)
+            USER_NAME="${OPTARG}"
+            ;;
+        d)
+            DB_NAME="${OPTARG}"
+            ;;
+        v)
+            VERSION="${OPTARG}"
+            ;;
+        h)
+            usage
+            exit 1
+            ;;
+        ?)
+            usage
+            exit 1
+            ;;
+    esac
+done
+shift "$((OPTIND - 1))"
+
+##########
+# ACTION #
+##########
+
+echo "Connecting to database at ${HOSTNAME}:${PORT}"
+
+psql_args=()
+psql_args+=("-h" "${HOSTNAME}")
+psql_args+=("-p" "${PORT}")
+psql_args+=("-U" "${USER_NAME}")
+psql_args+=("-d" "${DB_NAME}")
+
 inputrc_config="$(cat <<EOF
 set editing-mode vi
 \$if mode=vi
@@ -25,5 +98,5 @@ docker run \
     --tty --interactive \
     --rm \
     --network host \
-    postgis/postgis:latest \
-    bash -c "echo -e '${inputrc_config}' >> /etc/inputrc && exec psql $psql_args"
+    postgres:"${VERSION}" \
+    bash -c "echo -e '${inputrc_config}' >> /etc/inputrc && exec psql ${psql_args[*]}"
