@@ -13,6 +13,7 @@ HOSTNAME="127.0.0.1"
 PORT="5432"
 USER_NAME="postgres"
 DB_NAME="postgres"
+DOCKER_NETWORK="host"
 
 VERSION="latest"
 
@@ -26,11 +27,12 @@ usage() {
 Run psql from within Docker.
 
 OPTIONS:
-    -H HOSTNAME Server hostname (defaults to '${HOSTNAME}')
-    -p PORT     Server port (defaults to '${PORT}')
-    -U USERNAME User name (defaults to '${USER_NAME}')
-    -d DBNAME   Database name (defaults to '${DB_NAME}')
-    -v VERSION  PSQL version (defaults to '${VERSION}')
+    -H HOSTNAME         Server hostname (defaults to '${HOSTNAME}')
+    -p PORT             Server port (defaults to '${PORT}')
+    -U USERNAME         User name (defaults to '${USER_NAME}')
+    -d DBNAME           Database name (defaults to '${DB_NAME}')
+    -v VERSION          PSQL version (defaults to '${VERSION}')
+    -N DOCKER_NETWORK   Docker network name (defaults to '${DOCKER_NETWORK}')
     -h    Display this message"
 }
 
@@ -38,7 +40,7 @@ OPTIONS:
 # OPTIONS PARSING #
 ###################
 
-while getopts 'hH:p:U:d:v:' opts ; do
+while getopts 'hH:p:U:d:v:N:' opts ; do
     case "${opts}" in
         H)
             HOSTNAME="${OPTARG}"
@@ -54,6 +56,9 @@ while getopts 'hH:p:U:d:v:' opts ; do
             ;;
         v)
             VERSION="${OPTARG}"
+            ;;
+        N)
+            DOCKER_NETWORK="${OPTARG}"
             ;;
         h)
             usage
@@ -97,6 +102,6 @@ EOF
 docker run \
     --tty --interactive \
     --rm \
-    --network host \
+    --network "${DOCKER_NETWORK}" \
     postgres:"${VERSION}" \
     bash -c "echo -e '${inputrc_config}' >> /etc/inputrc && exec psql ${psql_args[*]}"
