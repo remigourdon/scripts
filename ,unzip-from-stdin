@@ -1,0 +1,9 @@
+#!/bin/bash
+# Unzip file from stdin (useful for chezmoi)
+set -Eeuo pipefail
+
+TEMP_FILE="$(mktemp)"
+
+cat - > "${TEMP_FILE}"
+
+unzip -qq -c "${TEMP_FILE}" "${1}"
