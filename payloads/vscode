@@ -5,7 +5,9 @@ GIT_LOG_CMD="git -C {} log --all --decorate --oneline --color=always -- | head -
 FZF_CMD=("fzf" "--multi" "--info" "inline" "--reverse" "--delimiter" "/" "--with-nth" "-1" "--preview-window" "up,4" "--preview" "echo -e '\033[0;36m{}\033[0m'; ${GIT_LOG_CMD}")
 VSCODE_CMD=("code" "--new-window")
 
-readarray -t SELECTED < <(fd -uu --type d -g '.git' ~/Projects/ ~/Sources/ | sed 's!/.git$!!' | "${FZF_CMD[@]}")
+
+
+readarray -t SELECTED < <(fd -uu -g '.git' ~/Projects/ ~/Sources/ | sed 's!/.git$!!' | "${FZF_CMD[@]}")
 
 # Start application and detach
 [ "${#SELECTED[@]}" -ne 0 ] && setsid "${VSCODE_CMD[@]}" "${SELECTED[@]}" >&/dev/null </dev/null &
