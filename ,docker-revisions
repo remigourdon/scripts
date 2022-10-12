@@ -1,0 +1,48 @@
+#!/bin/bash
+# List Open Container image revisions
+set -Eeuo pipefail
+
+#########
+# USAGE #
+#########
+
+usage() {
+    echo "Usage: $(basename "${0}") [OPTIONS]
+
+List Open Container image revisions.
+
+OPTIONS:
+    -R REMOTE   SSH remote host (default is local)
+    -h          Display this message"
+}
+
+###################
+# OPTIONS PARSING #
+###################
+
+REMOTE=""
+
+while getopts 'R:h' opts ; do
+    case "${opts}" in
+        R)
+            REMOTE="${OPTARG}"
+            ;;
+        h)
+            usage
+            exit 1
+            ;;
+        ?)
+            usage
+            exit 1
+            ;;
+    esac
+done
+shift "$((OPTIND - 1))"
+
+CMD=("docker" "ps" "--format" "'{{ .Names }},{{ .Label \"org.opencontainers.image.revision\" }}'")
+
+if [[ -n "${REMOTE}" ]] ; then
+    ssh "${REMOTE}" "${CMD[@]}"
+else
+    "${CMD[@]}"
+fi | grep -v ',$' | sort | qsv table
