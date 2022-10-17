@@ -1,0 +1,99 @@
+#!/bin/bash
+# List Git branches and mark the ones to prune
+set -Eeuo pipefail
+
+#########
+# USAGE #
+#########
+
+usage() {
+    echo "Usage: $(basename "${0}") [OPTIONS]
+
+List Git branches and mark the ones to prune.
+
+OPTIONS:
+    -x          Do not display checked out branch
+    -z          Add FZF selector
+    -C  REPO    Repository to change to
+    -h          Display this message"
+}
+
+###################
+# OPTIONS PARSING #
+###################
+
+DISPLAY_CHECKED_OUT=true
+WITH_FZF=false
+REPOSITORY="."
+
+while getopts 'xzC:h' opts ; do
+    case "${opts}" in
+        x)
+            DISPLAY_CHECKED_OUT=false
+            ;;
+        z)
+            WITH_FZF=true
+            ;;
+        C)
+            REPOSITORY="${OPTARG}"
+            ;;
+        h)
+            usage
+            exit 1
+            ;;
+        ?)
+            usage
+            exit 1
+            ;;
+    esac
+done
+shift "$((OPTIND - 1))"
+
+#############
+# FUNCTIONS #
+#############
+
+extractName() {
+    rg --only-matching '^(\*\s+)?([^\s]+)' --replace '$2'
+}
+
+isCheckedOut() {
+    rg --quiet "^\*"
+}
+
+isGone() {
+    rg --quiet ": gone\]"
+}
+
+parseBranchString() {
+    local branch_string="${1}"
+    local is_checked_out=false
+    local is_gone=false
+    local name=""
+    name="$(extractName <<< "${branch_string}")"
+    isCheckedOut <<< "${branch_string}" && is_checked_out=true
+    isGone <<< "${branch_string}" && is_gone=true
+    if [[ "${is_checked_out}" = true ]] && [[ "${DISPLAY_CHECKED_OUT}" = false ]] ; then
+        return 0
+    fi
+    [[ "${is_checked_out}" = true ]] && echo -ne "✅\t" || echo -ne " \t"
+    [[ "${is_gone}" = true ]] && echo -ne "💀\t" || echo -ne " \t"
+    echo -e "${name}"
+}
+
+##########
+# ACTION #
+##########
+
+if [[ "${WITH_FZF}" = true ]] ; then
+    POST_CMD=("fzf" "--delimiter" "\t" "-0" "-m")
+    POST_CMD+=("--preview" "git -C ${REPOSITORY} log --color=always {3} --")
+    POST_CMD+=("--preview" "git -C ${REPOSITORY} log --color=always {3} --")
+else
+    echo -e "branch\tis_checked_out\tis_gone"
+    POST_CMD=("cat" "-")
+fi
+
+while read -r branch ; do
+    parseBranchString "${branch}"
+done < <(git -C "${REPOSITORY}" branch -vv) | "${POST_CMD[@]}"
