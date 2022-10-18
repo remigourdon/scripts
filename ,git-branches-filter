@@ -54,11 +54,11 @@ shift "$((OPTIND - 1))"
 #############
 
 extractName() {
-    rg --only-matching '^(\*\s+)?([^\s]+)' --replace '$2'
+    rg --only-matching '^([\*\+]\s+)?([^\s]+)' --replace '$2'
 }
 
 isCheckedOut() {
-    rg --quiet "^\*"
+    rg --quiet "^[\*\+]"
 }
 
 isGone() {
