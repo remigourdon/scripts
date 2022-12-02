@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+###############
+# DEFINITIONS #
+###############
+
+OUTPUT_FORMAT="json"
+OUTPUT_FILE="-"
+DB_TABLE="syslog_log"
+
+#########
+# USAGE #
+#########
+
+usage() {
+    echo "Usage: $(basename "${0}") [OPTIONS] START_TIME END_TIME [LOG_FILES...]
+
+Extract logs using lnav.
+
+OPTIONS:
+    -F FORMAT       Output format to use (default is ${OUTPUT_FORMAT})
+    -O OUTPUT_FILE  Output file (default is ${OUTPUT_FILE})
+    -t DB_TABLE     Name of the table to write to in db output format (default is ${DB_TABLE})
+    -h              Display this message"
+}
+
+###################
+# OPTIONS PARSING #
+###################
+
+while getopts 'F:O:t:h' opts ; do
+    case "${opts}" in
+        F)
+            OUTPUT_FORMAT="${OPTARG}"
+            ;;
+        O)
+            OUTPUT_FILE="${OPTARG}"
+            ;;
+        t)
+            DB_TABLE="${OPTARG}"
+            ;;
+        h)
+            usage
+            exit 1
+            ;;
+        ?)
+            usage
+            exit 1
+            ;;
+    esac
+done
+shift "$((OPTIND - 1))"
+
+################
+# ARGS PARSING #
+################
+
+if [[ ${#} -lt 2 ]] ; then
+    usage
+    exit 1
+else
+    START_TIME="${1}"
+    END_TIME="${2}"
+    LOG_FILES=("${@:3}")
+fi
+
+###########
+# ACTIONS #
+###########
+
+echo "Will write output to ${OUTPUT_FILE}" >&2
+
+LNAV_CMD=("lnav" "-n" "-N" "-q")
+SELECT_QUERY="SELECT log_time, log_procname, log_body FROM syslog_log WHERE log_time BETWEEN datetime('${START_TIME}') AND datetime('${END_TIME}');"
+
+if [[ "${OUTPUT_FORMAT}" = db ]] ; then
+
+    if [[ "${OUTPUT_FILE}" = "-" ]] ; then
+        echo "Output format db requires output file, not stdout (use -O)" >&2
+        exit 2
+    fi
+
+    LNAV_CMD+=("-c" ";ATTACH '${OUTPUT_FILE}' AS bkp;")
+    LNAV_CMD+=("-c" ";CREATE TABLE bkp.${DB_TABLE} AS ${SELECT_QUERY}")
+    LNAV_CMD+=("-c" ";DETACH DATABASE bkp;")
+
+else
+
+    LNAV_CMD+=("-c" ";${SELECT_QUERY}")
+    if [[ "${OUTPUT_FORMAT}" = json ]] ; then
+        LNAV_CMD+=("-c" ":write-json-to ${OUTPUT_FILE}")
+
+    elif [[ "${OUTPUT_FORMAT}" = csv ]] ; then
+        LNAV_CMD+=("-c" ":write-csv-to ${OUTPUT_FILE}")
+    else
+        echo "Unsupported output format ${OUTPUT_FORMAT}" >&2
+        exit 1
+    fi
+
+fi
+LNAV_CMD+=("${LOG_FILES[@]}")
+
+"${LNAV_CMD[@]}"
