@@ -1,0 +1,42 @@
+#!/bin/bash
+# Start a pomodoro timer from a taskwarrior active task
+
+formatDate() {
+    sed -E 's/(..)(..)(..)T(..)(..)(..)Z/\1-\2-\3T\4:\5:\6Z/'
+}
+
+toTSV() {
+    while IFS='$..' read -r line; do
+        id="$(jq --raw-output .id <<< "${line}")"
+        desc="$(jq --raw-output .description <<< "${line}")"
+        status="$(jq --raw-output .status <<< "${line}")"
+        due="$(jq --raw-output .due <<< "${line}" | formatDate)"
+        created="$(jq --raw-output .entry <<< "${line}" | formatDate)"
+        modified="$(jq --raw-output .modified <<< "${line}" | formatDate)"
+        start="$(jq --raw-output .start <<< "${line}" | formatDate)"
+        urgency="$(jq --raw-output .urgency <<< "${line}" | formatDate)"
+        echo -e "${id}\t${desc}\t${status}\t${due}\t${created}\t${modified}\t${start}\t${urgency}"
+    done
+}
+
+PREVIEW_CMD="echo -e 'Description:\t{2}\nStatus:\t\t{3}\nDue:\t\t{4}\nCreated:\t{5}\nModified:\t{6}\nStarted:\t{7}\nUrgency:\t{8}'"
+FZF_CMD=("fzf" "--prompt" "Pick task:" "--info" "hidden" "--reverse" "--delimiter" "\t" "--with-nth" "2" "--preview-window" "up,7" "--preview" "${PREVIEW_CMD}")
+
+ACTIVE_TASKS_JSON="$(task +ACTIVE export rc.json.array=off 2>/dev/null)"
+ACTIVE_TASKS_TSV="$(toTSV <<< "${ACTIVE_TASKS_JSON}")"
+
+SELECTED_TASK="$(echo "${ACTIVE_TASKS_TSV}" | sort --key 8 | "${FZF_CMD[@]}" | cut -d $'\t' -f2)"
+
+[[ -z "${SELECTED_TASK}" ]] && exit
+
+MINUTES=("1" "5" "10" "15" "20" "25")
+SELECTED_MINUTES="$(printf "%s\n" "${MINUTES[@]}" | tac | fzf --prompt "Duration in minutes:")"
+
+[[ -z "${SELECTED_MINUTES}" ]] && exit
+
+TASK_STR="${SELECTED_MINUTES} minutes pomodoro for task '${SELECTED_TASK}'"
+POMODORO="notify-send \"${TASK_STR} has started!\" ; sleep $((SELECTED_MINUTES * 60)) ; notify-send --urgency critical \"${TASK_STR} is done!\""
+
+# Start application and detach
+setsid bash -c "${POMODORO}" >&/dev/null </dev/null &
+sleep 0.01
