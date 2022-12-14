@@ -1,0 +1,64 @@
+#!/bin/bash
+# Show Taskwarrior list and refresh it without flickering
+set -Eeuo pipefail
+
+#########
+# USAGE #
+#########
+
+usage() {
+    echo "Usage: $(basename "${0}") [OPTIONS]
+
+Show Taskwarrior list and refresh it without flickering.
+
+OPTIONS:
+    -h          Display this message"
+}
+
+###################
+# OPTIONS PARSING #
+###################
+
+while getopts 'h' opts ; do
+    case "${opts}" in
+        h)
+            usage
+            exit 1
+            ;;
+        ?)
+            usage
+            exit 1
+            ;;
+    esac
+done
+shift "$((OPTIND - 1))"
+
+########
+# TRAP #
+########
+
+# Unhide cursor on exit
+unhide_cursor() {
+    printf '\e[?25h'
+}
+trap unhide_cursor EXIT
+
+###########
+# ACTIONS #
+###########
+
+# Clear the screen initially
+clear
+
+# Hide the cursor
+printf '\e[?25l'
+
+# Display loop
+while true ; do
+    # Move cursor to the top of the screen without clearing
+    printf '\033[;H'
+    # Display Taskwarrior
+    task "${@}" || true
+    # Wait
+    sleep 0.5
+done
