@@ -13,12 +13,13 @@ if (typeof token === "undefined") {
 
 const query = `query {
   group(fullPath: "lynk-global/mission-software") {
-    mergeRequests(includeSubgroups: true, state: opened, draft: false, sort: UPDATED_DESC) {
+    mergeRequests(includeSubgroups: true, state: opened, sort: UPDATED_DESC) {
       nodes {
         project {
           name
         }
         title
+        draft
         webUrl
         state
         approved
@@ -63,8 +64,12 @@ const mergeRequestsFlattened = mergeRequests.map(mr => {
   return Object.assign({}, mr, { assignees, reviewers, approvedBy });
 });
 
-// Filter to only what I need to review
-const mergeRequestsToReview = mergeRequestsFlattened.filter(mr => mr.reviewers.includes(username) && !mr.approvedBy.includes(username));
+// Filter list
+const mergeRequestsToReview = mergeRequestsFlattened.filter(mr => {
+    let keep = !mr.draft || (mr.draft && argv.withDrafts);
+    let iAmReviewer = mr.reviewers.includes(username) && !mr.approvedBy.includes(username);
+    return keep && iAmReviewer;
+});
 
 let output = "";
 mergeRequestsToReview.forEach(mr => {
