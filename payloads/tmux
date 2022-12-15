@@ -1,0 +1,16 @@
+#!/bin/bash
+# Open an existing tmux session
+
+SCRIPT_DIR="$( dirname "${BASH_SOURCE[0]}" )"
+
+FZF_CMD=("fzf" "--info" "inline" "--reverse")
+
+SELECTED="$(tmux list-sessions -F '#S [#{session_attached} attached]' | "${FZF_CMD[@]}" | cut -d' ' -f1)"
+
+[ -z "${SELECTED}" ] && exit 1
+
+# Start application and detach
+TERMINAL_CMD="${TERMINAL} -e"
+EXECUTABLE="${TERMINAL_CMD} tmux attach-session -t ${SELECTED}"
+setsid /bin/sh -c "${EXECUTABLE}" >&/dev/null </dev/null &
+sleep 0.01
