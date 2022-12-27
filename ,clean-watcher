@@ -2,6 +2,13 @@
 # Refresh a command on a regular basis without flickering
 set -Eeuo pipefail
 
+###############
+# DEFINITIONS #
+###############
+
+RATE=0.5
+CLEAR_ITER=60
+
 #########
 # USAGE #
 #########
@@ -12,7 +19,8 @@ usage() {
 Refresh a command on a regular basis without flickering.
 
 OPTIONS:
-    -r SECONDS  Refresh rate in seconds
+    -r SECONDS  Refresh rate in seconds (default is ${RATE})
+    -c NUMBER   Fully clear every N iteration (default is ${CLEAR_ITER})
     -h          Display this message"
 }
 
@@ -20,12 +28,13 @@ OPTIONS:
 # OPTIONS PARSING #
 ###################
 
-RATE=0.5
-
-while getopts 'r:h' opts ; do
+while getopts 'r:c:h' opts ; do
     case "${opts}" in
         r)
             RATE="${OPTARG}"
+            ;;
+        c)
+            CLEAR_ITER="${OPTARG}"
             ;;
         h)
             usage
@@ -60,11 +69,19 @@ clear
 printf '\e[?25l'
 
 # Display loop
+n=1
 while true ; do
     # Move cursor to the top of the screen without clearing
     printf '\033[;H'
     # Run command
     "${@}" || true
+    # Clear every N iterations
+    if [[ "${n}" -eq "${CLEAR_ITER}" ]] ; then
+        clear
+        n=0
+    else
+        n=$((n+1))
+    fi
     # Wait
     sleep "${RATE}"
 done
