@@ -1,4 +1,4 @@
 #!/bin/bash
 # Start a Python interpreter with math loaded
 
-python -i -c "from math import *"
+ipython --ignore-cwd --quick --no-banner --no-confirm-exit -i -c "from math import *"

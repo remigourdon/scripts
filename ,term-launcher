@@ -5,6 +5,9 @@ TITLE=term-launcher
 WIDTH=100
 HEIGHT=30
 
+# Source asdf
+. "$HOME/.asdf/asdf.sh"
+
 case "${TERMINAL}" in
     gnome-terminal)
         "${TERMINAL}" --title "${TITLE}" --name "${TITLE}" --role "${TITLE}" --geometry "${WIDTH}x${HEIGHT}" --hide-menubar -- ,launcher "${@}"
