@@ -1,0 +1,49 @@
+#!/usr/bin/env zx
+
+$.verbose = false;
+
+const jira_url = "https://lynk.atlassian.net";
+const username = "rgourdon@lynk.world";
+
+// Check token
+const token = process.env.JIRA_API_TOKEN;
+if (typeof token === "undefined") {
+  console.log(chalk.red("Missing JIRA_API_TOKEN environment variable, aborting"));
+  process.exit(1);
+}
+
+// Convert username and token to base64
+const base64_token = btoa(`${username}:${token}`)
+
+// JQL query
+const jql_query_assignee = `(assignee='rgourdon@lynk.world' OR labels='rgourdon@lynk.world')`
+const jql_query_status = "status not in (Done, Rejected)"
+const jql_query_project = "((project != 'OPS' AND Sprint is not EMPTY) OR project = 'OPS')"
+const jql_query = `${jql_query_assignee} AND ${jql_query_status} AND ${jql_query_project} order by updatedDate DESC`
+
+// Send query
+const response = await fetch(`${jira_url}/rest/api/2/search?jql=${jql_query}`, {
+  method: 'get',
+  headers: { "Authorization": `Basic ${base64_token}`, 'Content-Type': 'application/json' },
+});
+const json = await response.json();
+
+let output = "";
+json.issues.forEach(issue => {
+  const key = issue.key;
+  const summary = issue.fields.summary;
+  const summary_with_key = `${summary} [${key}]`
+  const status = issue.fields.status.name;
+  const assignee = issue.fields.assignee.displayName;
+  const reporter = issue.fields.reporter.displayName;
+  const labels = issue.fields.labels.reduce((r, l) => {
+    return r + " " + l;
+  }, "");
+  const url = `${jira_url}/browse/${key}`;
+  const createdAt = issue.fields.created;
+  const updatedAt = issue.fields.updated;
+  output += `${summary_with_key}\t${status}\t${assignee}\t${reporter}\t${labels}\t${url}\t${createdAt}\t${updatedAt}\0`
+});
+
+console.log(output);
+console.log(json.issues[0])

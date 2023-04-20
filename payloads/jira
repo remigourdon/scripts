@@ -1,0 +1,14 @@
+#!/bin/bash
+# Open Jira ticket
+
+SCRIPT_DIR="$( dirname "${BASH_SOURCE[0]}" )"
+
+PREVIEW_CMD="echo -e 'Summary:\t{1}\nCreated:\t{7}\nUpdated:\t{8}\nStatus:\t\t{2}\nAssignee:\t{3}\nReporter:\t{4}\nLabels:\t\t{5}'"
+FZF_CMD=("fzf" "--read0" "--info" "hidden" "--reverse" "--delimiter" "\t" "--with-nth" "1" "--preview-window" "up,7" "--preview" "${PREVIEW_CMD}")
+
+SELECTED_URL="$("${SCRIPT_DIR}/_jira" | "${FZF_CMD[@]}" | cut -d $'\t' -f 6)"
+
+[[ -z "${SELECTED_URL}" ]] && exit 0
+
+# Open MR URL in browser
+"${BROWSER}" "${SELECTED_URL}"
