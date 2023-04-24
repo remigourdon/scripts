@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+SCRIPT_DIR="$( dirname "${BASH_SOURCE[0]}" )"
+CONFIG_FILE="${SCRIPT_DIR}/tools.source"
+
+source "${CONFIG_FILE}"
+
+echo "${TOOLS[@]}"
+
+"${TOOLS["${1}"]}" "${@:2}"
