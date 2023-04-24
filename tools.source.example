@@ -1,4 +1,4 @@
 # Declare tools array
-declare -a TOOLS
+declare -A TOOLS
 
 TOOLS[test]="${HOME}/Sandbox/python-bin-test/.venv/bin/test"

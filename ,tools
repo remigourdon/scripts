@@ -5,6 +5,12 @@ CONFIG_FILE="${SCRIPT_DIR}/tools.source"
 
 source "${CONFIG_FILE}"
 
-echo "${TOOLS[@]}"
+TOOL="${1:-}"
 
-"${TOOLS["${1}"]}" "${@:2}"
+if [[ -n "${TOOL}" ]] ; then
+    # Run tool
+    "${TOOLS["${TOOL}"]}" "${@:2}"
+else
+    # List tools
+    echo "${!TOOLS[@]}" | tr " " $"\n" | sort
+fi
