@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+#########
+# USAGE #
+#########
+
+usage() {
+    echo "Usage: $(basename "${0}") [OPTIONS] PACKAGE_NAME
+
+Setup a new Python package with Poetry
+
+OPTIONS:
+    -w    Package will be part of a VSCode workspace
+    -A    Set up for analysis (ipython kernel, etc)
+    -h    Display this message"
+}
+
+###################
+# OPTIONS PARSING #
+###################
+
+WORKSPACE=false
+ANALYSIS=false
+
+while getopts 'wAh' opts ; do
+    case "${opts}" in
+        w)
+            WORKSPACE=true
+            ;;
+        A)
+            ANALYSIS=true
+            ;;
+        h)
+            usage
+            exit 1
+            ;;
+        ?)
+            usage
+            exit 1
+            ;;
+    esac
+done
+shift "$((OPTIND - 1))"
+
+################
+# ARGS PARSING #
+################
+
+if [[ ${#} -ne 1 ]] ; then
+    usage
+    exit 1
+else
+    PACKAGE_NAME="${1}"
+fi
+
+###########
+# ACTIONS #
+###########
+
+# Initialize Poetry with src/ structure
+poetry new --src "${PACKAGE_NAME}"
+
+pushd "${PACKAGE_NAME}"
+
+# Setup direnv
+echo "layout poetry" >.envrc
+
+# Add gitignore
+wget -O .gitignore https://raw.githubusercontent.com/github/gitignore/main/Python.gitignore
+
+# Add Poetry dev dependencies
+poetry add --group dev flake8 black mypy
+
+# Configure for analysis
+if [[ "${ANALYSIS}" = true ]] ; then
+    poetry add ipykernel
+    poetry add --group dev nbconvert
+    echo "*.ipynb filter=strip-notebook-output" > .gitattributes
+fi
+
+# Add flake8 configuration to be compatible with black
+echo -e '[flake8]\nmax-line-length = 88\nextend-ignore = "E203,"' > setup.cfg
+
+# Add setting for VSCode Python interpreter
+mkdir -p .vscode
+echo '{"python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python"}' | jq . > .vscode/settings.json
+
+popd
+
+# Add to VSCode Workspace
+if [[ "${WORKSPACE}" = true ]] ; then
+    VSCODE_WORKSPACE_FILE=".vscode/tools.code-workspace"
+    mkdir -p "$(dirname "${VSCODE_WORKSPACE_FILE}")"
+    ! [[ -f "${VSCODE_WORKSPACE_FILE}" ]] && echo "{ \"folders\": [] }" > "${VSCODE_WORKSPACE_FILE}"
+    jq ".folders += [{\"name\": \"${PACKAGE_NAME}\", \"path\": \"../${PACKAGE_NAME}\"}]" "${VSCODE_WORKSPACE_FILE}" > "${VSCODE_WORKSPACE_FILE}.tmp"
+    mv "${VSCODE_WORKSPACE_FILE}.tmp" "${VSCODE_WORKSPACE_FILE}"
+fi
+
