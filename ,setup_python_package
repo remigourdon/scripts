@@ -80,7 +80,7 @@ if [[ "${ANALYSIS}" = true ]] ; then
 fi
 
 # Add flake8 configuration to be compatible with black
-echo -e '[flake8]\nmax-line-length = 88\nextend-ignore = "E203,"' > setup.cfg
+echo -e '[flake8]\nmax-line-length = 88\nextend-ignore = E203' > setup.cfg
 
 # Add setting for VSCode Python interpreter
 mkdir -p .vscode
