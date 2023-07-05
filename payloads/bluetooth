@@ -1,0 +1,24 @@
+#!/bin/bash
+# Connect to a Bluetooth device
+
+FZF_CMD=("fzf" "--info" "inline" "--reverse" "--delimiter" " " "--with-nth" "3.." "--preview-window" "up,4" "--preview" "bluetoothctl info {2} | grep -E '(Paired|Trusted|Blocked|Connected)' | sed -E 's/^\s*//'")
+
+SELECTED="$(bluetoothctl paired-devices | "${FZF_CMD[@]}")"
+
+isConnected() {
+    local device="${1}"
+    bluetoothctl info "${device}" | grep --quiet 'Connected: yes'
+}
+
+# Connect to bluetooth device if not already connected
+if [[ -n "${SELECTED}" ]] ; then
+    device_id="$(cut -d' ' -f2 <<< "${SELECTED}")"
+    if isConnected "${device_id}" ; then
+        read -r -n 1 -p "Disconnect? " answer
+        echo
+        [[ "${answer}" == "y" ]] && bluetoothctl disconnect "${device_id}"
+        sleep 2
+    else
+        bluetoothctl connect "${device_id}"
+    fi
+fi
