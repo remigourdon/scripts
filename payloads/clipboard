@@ -6,7 +6,7 @@ CLIPBOARD_COPY_CMD=("wl-copy" "--foreground")
 
 # Select a specific cheatsheet item and copy it
 FZF_CMD=("fzf" "--info" "inline" "--reverse")
-SELECTED="$("${CLIPBOARD_HISTORY_CMD[@]}" | sed -E 's/[0-9]+\. //' | "${FZF_CMD[@]}")"
+SELECTED="$("${CLIPBOARD_HISTORY_CMD[@]}" | sed -E 's/^[0-9]+[[:blank:]]+//' | "${FZF_CMD[@]}")"
 
 [ -z "${SELECTED}" ] && exit 2
 
