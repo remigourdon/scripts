@@ -33,9 +33,9 @@ if [[ "${HOSTNAME}" = xps-work ]] ; then
     echo "Configuring monitors for work laptop"
     if [[ -n "${WORK_LEFT_ID}" ]] && [[ -n "${WORK_RIGHT_ID}" ]] ; then
         echo "Setting monitors in office configuration (docked)"
-        CMD+=("--output" "${INTERNAL_ID}" "--off")
         CMD+=("--output" "${WORK_LEFT_ID}" "--on" "--mode" "2560x1440@59.951000Hz" "--pos" "0,0" "--scale" "1")
         CMD+=("--output" "${WORK_RIGHT_ID}" "--on" "--mode" "2560x1440@59.951000Hz" "--pos" "2560,0" "--scale" "1")
+        CMD+=("--output" "${INTERNAL_ID}" "--on" "--mode" "3456x2160@60.000999Hz" "--pos" "5120,1200" "--scale" "2")
     elif [[ -n "${HOME_WIDE_ID}" ]] && [[ -n "${HOME_TALL_ID}" ]] ; then
         echo "Setting monitors in home configuration (docked)"
         CMD+=("--output" "${INTERNAL_ID}" "--off")
