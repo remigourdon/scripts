@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# Reads start and stop from file or CLI and counts down then up
+set -Eeuo pipefail
+
+if [[ -f "${1}" ]] ; then
+    FROM_FILE=true
+    { read -r START; read -r STOP; } < "${1}"
+else
+    FROM_FILE=false
+    START="${1}"
+    STOP="${2}"
+fi
+
+displayTime() {
+  local T="${1}"
+  local D="$((T/60/60/24))"
+  local H="$((T/60/60%24))"
+  local M="$((T/60%60))"
+  local S="$((T%60))"
+  (( D > 0 )) && printf '%dd ' "${D}"
+  (( H > 0 )) && printf '%dh ' "${H}"
+  (( M > 0 )) && printf '%dm ' "${M}"
+  (( D > 0 || "${H}" > 0 || "${M}" > 0 ))
+  printf '%ds\n' "${S}"
+}
+
+DIFF_START="$(( START - $(date +%s) ))"
+DIFF_STOP="$(( STOP - $(date +%s) ))"
+
+if [[ "${DIFF_START}" -ge 0 ]] ; then
+    echo "-$(displayTime "${DIFF_START}")"
+elif [[ "${DIFF_STOP}" -ge 0 ]] ; then
+    echo "$(displayTime "${DIFF_STOP}")"
+else
+    if [[ "${FROM_FILE}" = true ]] ; then
+        rm "${1}"
+    else
+        echo "Countdown and up is over"
+    fi
+fi
