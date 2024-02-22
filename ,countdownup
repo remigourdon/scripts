@@ -4,11 +4,12 @@ set -Eeuo pipefail
 
 if [[ -f "${1}" ]] ; then
     FROM_FILE=true
-    { read -r START; read -r STOP; } < "${1}"
+    { read -r START; read -r STOP; read -r META; } < "${1}"
 else
     FROM_FILE=false
     START="${1}"
     STOP="${2}"
+    META="${3:-}"
 fi
 
 displayTime() {
@@ -27,14 +28,19 @@ displayTime() {
 DIFF_START="$(( START - $(date +%s) ))"
 DIFF_STOP="$(( STOP - $(date +%s) ))"
 
+STARTED=false
+
 if [[ "${DIFF_START}" -ge 0 ]] ; then
-    echo "-$(displayTime "${DIFF_START}")"
+    echo "-$(displayTime "${DIFF_START}") ${META}"
 elif [[ "${DIFF_STOP}" -ge 0 ]] ; then
-    echo "$(displayTime "${DIFF_STOP}")"
+    if [[ "${STARTED}" = false ]] ; then
+        notify-send "${META} is starting!"
+        STARTED=true
+    fi
+    echo "$(displayTime "${DIFF_STOP}") ${META}"
 else
     if [[ "${FROM_FILE}" = true ]] ; then
         rm "${1}"
-    else
-        echo "Countdown and up is over"
     fi
+    notify-send "${META} is done!"
 fi
