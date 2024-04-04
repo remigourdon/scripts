@@ -18,29 +18,28 @@ displayTime() {
   local H="$((T/60/60%24))"
   local M="$((T/60%60))"
   local S="$((T%60))"
-  (( D > 0 )) && printf '%dd ' "${D}"
-  (( H > 0 )) && printf '%dh ' "${H}"
-  (( M > 0 )) && printf '%dm ' "${M}"
+  (( D > 0 )) && printf '%2dd ' "${D}"
+  (( H > 0 )) && printf '%2dh ' "${H}"
+  (( M > 0 )) && printf '%2dm ' "${M}"
   (( D > 0 || "${H}" > 0 || "${M}" > 0 ))
-  printf '%ds\n' "${S}"
+  printf '%2ds\n' "${S}"
 }
 
 DIFF_START="$(( START - $(date +%s) ))"
 DIFF_STOP="$(( STOP - $(date +%s) ))"
 
-STARTED=false
+NOTIFY_CMD=("notify-send" "--urgency=critical" "--expire-time=30000")
 
 if [[ "${DIFF_START}" -ge 0 ]] ; then
     echo "-$(displayTime "${DIFF_START}") ${META}"
-elif [[ "${DIFF_STOP}" -ge 0 ]] ; then
-    if [[ "${STARTED}" = false ]] ; then
-        notify-send "${META} is starting!"
-        STARTED=true
+elif [[ "${DIFF_STOP}" -ge 1 ]] ; then
+    if [[ "${DIFF_START}" -ge -1 ]] ; then
+        "${NOTIFY_CMD[@]}" "${META} has started!"
     fi
     echo "$(displayTime "${DIFF_STOP}") ${META}"
 else
     if [[ "${FROM_FILE}" = true ]] ; then
         rm "${1}"
     fi
-    notify-send "${META} is done!"
+    "${NOTIFY_CMD[@]}" "${META} is done!"
 fi
