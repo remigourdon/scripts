@@ -1,0 +1,123 @@
+#!/usr/bin/env -S uv run --quiet --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#     "typer",
+# ]
+# ///
+
+from pathlib import Path
+from typing import Annotated
+import subprocess
+
+import typer
+
+app = typer.Typer()
+
+
+def complete_worktrees():
+    stdout = subprocess.check_output(
+        ["git", "worktree", "list", "--porcelain"], text=True
+    )
+    for line in stdout.splitlines():
+        if line.startswith("worktree"):
+            path = Path(" ".join(line.split(" ")[1:]))
+            yield str(path.relative_to(Path.cwd(), walk_up=True))
+
+
+def complete_remotes():
+    stdout = subprocess.check_output(
+        ["git", "branch", "--remotes", "--format", "%(refname)"], text=True
+    )
+    for line in stdout.splitlines():
+        yield str(line.split("/")[-1])
+
+
+def complete_branches():
+    stdout = subprocess.check_output(
+        ["git", "branch", "--format", "%(refname)"], text=True
+    )
+    for line in stdout.splitlines():
+        yield str(line.split("/")[-1])
+
+
+@app.command()
+def add(
+    branch: Annotated[
+        str,
+        typer.Option(
+            "--branch",
+            "-b",
+            help="The local branch to use for the worktree",
+            autocompletion=complete_branches,
+        ),
+    ] = None,
+    remote: Annotated[
+        str,
+        typer.Option(
+            "--remote",
+            "-r",
+            help="The remote branch to use for the worktree",
+            autocompletion=complete_remotes,
+        ),
+    ] = None,
+    code: Annotated[
+        bool, typer.Option("--code", "-c", help="Open new worktree in VSCode")
+    ] = False,
+):
+    current_dir = Path(".").absolute()
+    match (branch, remote):
+        case (None, None):
+            print("Need at list a branch or remote specified")
+            raise typer.Abort()
+        case (_, None):
+            branch_name = branch
+        case (None, _):
+            branch_name = remote
+        case (_, _):
+            branch_name = branch
+    worktree_dir = current_dir.parent / f"{current_dir.name}.worktrees" / branch_name
+    args = [
+        "git",
+        "worktree",
+        "add",
+        str(worktree_dir),
+    ]
+    if branch_name not in complete_branches():
+        # Create the branch if it does not exist
+        args += ["-b", branch_name]
+    else:
+        # Otherwise just return it as the ref
+        args += [branch_name]
+    try:
+        subprocess.check_call(args)
+    except Exception:
+        print("Failed to create worktree")
+    else:
+        print(f"New worktree at: {worktree_dir.relative_to(Path.cwd(), walk_up=True)}")
+        if code:
+            print("Opening new worktree in VSCode")
+            subprocess.run(["code", worktree_dir])
+
+
+@app.command()
+def remove(
+    worktree: Annotated[
+        Path,
+        typer.Argument(
+            help="The worktree to remove",
+            autocompletion=complete_worktrees,
+        ),
+    ]
+):
+    subprocess.run(["git", "worktree", "remove", str(worktree)])
+
+
+@app.command()
+def list():
+    for wt in complete_worktrees():
+        print(wt)
+
+
+if __name__ == "__main__":
+    app()
